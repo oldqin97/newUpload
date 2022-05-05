@@ -21,27 +21,45 @@ const hashPercentage = ref(0);
 
 const requestList = ref([]);
 
-// #region
+const uploadPercentage = computed(() => {
+  if (!fileData.value || !chunkData.value.length) {
+    return 0;
+  }
+
+  const loaded = chunkData.value
+    .map(item => item.size * item.percentage)
+    .reduce((acc, cur) => acc + cur, 0);
+
+  return Number(parseInt(loaded / fileData.value.size).toFixed(1));
+});
+
+
+
 // 添加拖拽事件
-// const dragRef = ref();
-// const bindEvent = () => {
-//   dragRef.value.addEventListener('dragenter', e => {
-//     dragRef.value.style.borderColor = 'orange';
-//     e.preventDefault();
-//   });
+const dragRef = ref();
+const bindEvent = () => {
+  dragRef.value.addEventListener('dragover', e => {
+    dragRef.value.style.borderColor = 'orange';
+    e.preventDefault();
+  });
 
-//   dragRef.value.addEventListener('dragleave', e => {
-//     dragRef.value.style.borderColor = '#ddd';
-//     e.preventDefault();
-//   });
+  dragRef.value.addEventListener('dragleave', e => {
+    dragRef.value.style.borderColor = '#ddd';
+    e.preventDefault();
+  });
 
-//   dragRef.value.addEventListener('drop', e => {
-//     e.preventDefault();
-//     dragRef.value.style.borderColor = '#ddd';
-//     console.log(e);
-//   });
-// };
-// #endregion
+  dragRef.value.addEventListener('drop', e => {
+    e.preventDefault();
+    dragRef.value.style.borderColor = '#ddd';
+    const fileList = e.dataTransfer.files;
+    fileData.value = fileList[0];
+  });
+};
+
+onMounted(()=>{
+  bindEvent()
+})
+
 
 // web-worker计算hash
 const calculateHash = fileChunksList => {
@@ -317,6 +335,16 @@ const verifyUpload = async (filename, fileHash) => {
         :stroke-width="20"
         :percentage="hashPercentage"
         status="success"
+      />
+    </div>
+
+    <div v-show="uploadPercentage > 0">
+      <h3>文件上传进度</h3>
+      <el-progress
+        :text-inside="true"
+        :stroke-width="20"
+        status="success"
+        :percentage="uploadPercentage"
       />
     </div>
   </div>
